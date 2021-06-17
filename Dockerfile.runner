@@ -1,0 +1,24 @@
+FROM centos:7
+#安装cpp工具链，which和python-devel为boost需要
+RUN yum install -y deltarpm epel-release libstdc++-devel libstdc++-static gcc gcc-c++ cmake make && yum install -y cmake3
+RUN yum install -y which zlib python-devel postgresql-devel
+#soci需要
+RUN rpm -ivh https://repo.mysql.com//mysql57-community-release-el7-11.noarch.rpm && yum install -y mysql-community-devel
+#编译依赖库
+WORKDIR /workspace
+COPY ./archives/* ./
+RUN tar -xf argtable.tar.gz && cd argtable-v3.2.1.52f24e5 && mkdir build && cd build && cmake3 .. && make && make install
+RUN tar -xf boost.tar.gz && cd boost_1_66_0 && ./bootstrap.sh --with-libraries=all --with-toolset=gcc && ./b2 toolset=gcc -q && ./b2 install
+RUN tar -xf googlere2.tar.gz && cd re2-2021-06-01 && mkdir build && cd build && cmake3 .. && make && make install
+RUN tar -xf googletest.tar.gz && cd googletest-release-1.8.0 && mkdir build && cd build && cmake3 .. && make && make install
+RUN tar -xf hiredis.tar.gz && cd hiredis-0.13.3 && make && make install
+RUN tar -xf librdkafka.tar.gz && cd librdkafka-1.5.0 && mkdir build && cd build && cmake3 .. && make && make install
+RUN tar -xf libzmq.tar.gz  && cd zeromq-4.2.3 && ./configure --without-libsodium && make && make install
+# RUN tar -xf postgresql.tar.gz && cd postgresql-12.7 && ./configure --without-readline && make
+RUN tar -xf protobuf-all.tar.gz && cd protobuf-3.5.1 && ./configure && make && make install
+RUN tar -xf spdlog.tar.gz && cd spdlog-1.8.5 && mkdir build && cd build && cmake3 .. && make && make install
+RUN tar -xf xerces-c.tar.gz && cd xerces-c-3.2.3 && mkdir build && cd build && cmake3 .. && make && make install
+RUN tar -xf soci.tar.gz && cd soci-3.2.3/src && mkdir build && cd build && cmake3 .. && make && make install
+RUN tar -xf root.tar.gz -C /
+RUN rm -rf * && ldconfig
+RUN yum remove -y gcc gcc-c++ cmake make cmake3
